@@ -1,0 +1,37 @@
+#include "lwip/init.h"
+#include "lwip/netif.h"
+#include "lwip/timeouts.h"
+#include "netif/tapif.h"
+#include "tcpecho_raw.h"
+#include <unistd.h>
+#include <sys/time.h>
+
+/* 提供 sys_now 实现（用于超时） */
+u32_t sys_now(void) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+static struct netif netif;
+
+int main(void) {
+    lwip_init();
+
+    ip_addr_t ipaddr, netmask, gw;
+    IP4_ADDR(&ipaddr, 192,168,1,200);
+    IP4_ADDR(&netmask, 255,255,255,0);
+    IP4_ADDR(&gw, 192,168,1,1);
+
+    netif_add(&netif, &ipaddr, &netmask, &gw, NULL, tapif_init, tcpip_input);
+    netif_set_default(&netif);
+    netif_set_up(&netif);
+
+    tcpecho_raw_init();   // 开启 TCP 回显服务，端口 7
+
+    while (1) {
+        sys_check_timeouts();
+        usleep(10000);    // 10ms 轮询
+    }
+    return 0;
+}

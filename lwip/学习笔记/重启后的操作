@@ -1,0 +1,128 @@
+根据你成功触发断点的操作，以下是**重启电脑后恢复调试环境的命令清单**。每一条都附带解释，确保你能理解并可靠执行。
+
+---
+
+## 📋 重启后命令清单（按顺序执行）
+
+### 1️⃣ 进入 lwIP 源码目录
+```bash
+cd ~/IwIP/lwip
+```
+**解释**：所有相对路径都基于此目录。
+
+### 2️⃣ 重新创建并配置 TAP 设备
+```bash
+sudo ip link delete tap0 2>/dev/null         # 清除可能残留的 tap0（忽略错误）
+sudo ip tuntap add dev tap0 mode tap user $USER   # 创建 tap0 设备，归属当前用户
+sudo ip link set tap0 up                     # 启动 tap0 虚拟网卡
+sudo ip addr add 192.168.1.1/24 dev tap0     # 为 tap0 分配 IP（与 lwIP 的 192.168.1.200 同网段）
+```
+**解释**：重启后 TAP 设备会消失，必须重新创建。IP 必须与 lwIP 程序内部配置的 IP（`192.168.1.200`）处于同一子网，这里是 `192.168.1.1/24`。
+
+### 3️⃣ 进入编译构建目录
+```bash
+cd ~/IwIP/lwip/build
+```
+**解释**：之前 CMake 编译生成的可执行文件和中间文件都存放在这里。
+
+### 4️⃣ 确认可执行文件存在
+```bash
+ls -l contrib/ports/unix/example_app/example_app
+```
+**解释**：检查 `example_app` 是否存在。如果丢失，需要重新编译（参考附言）。
+
+### 5️⃣ 启动 GDB 调试
+```bash
+sudo gdb ./contrib/ports/unix/example_app/example_app
+```
+**解释**：需要 `sudo` 权限，因为 TAP 设备操作需要 root 权限。
+
+### 6️⃣ 在 GDB 内设置断点并运行
+进入 GDB 后，依次输入：
+```text
+(gdb) break tcp_write
+(gdb) run
+```
+**解释**：`break tcp_write` 在 `tcp_out.c` 的 `tcp_write` 函数入口设置断点；`run` 启动程序。
+
+### 7️⃣ 在另一个终端触发 TCP 连接
+打开新终端（终端2），执行：
+```bash
+nc 192.168.1.200 7
+```
+连接成功后输入任意文字（如 `hello`）并按回车。
+**解释**：`nc` 连接到 lwIP 监听的端口 7（TCP echo 服务），发送数据会触发 `tcp_write` 断点。
+
+### 8️⃣ 在 GDB 中查看调用栈
+回到 GDB 终端，输入：
+```text
+(gdb) backtrace
+```
+**解释**：打印函数调用栈，显示从应用层到 `tcp_write` 的完整路径。
+
+---
+
+## 📌 附言：如果 `example_app` 文件丢失或损坏
+
+如果重启后 `example_app` 不存在（例如你删除了 `build` 目录），需要重新编译。但注意我们之前已经将 `stubs.o` 添加到了 `liblwipcore.a` 中，编译会成功。执行以下命令重建：
+
+```bash
+cd ~/IwIP/lwip
+rm -rf build
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+如果仍然出现 `undefined reference to sys_arch_protect` 等链接错误，说明需要重新注入 `stubs.o`。请按顺序执行：
+
+```bash
+cd ~/IwIP/lwip
+# 确保 stubs.c 存在（内容见下文）
+cat > stubs.c << 'EOF'
+#include "lwip/opt.h"
+#include "lwip/sys.h"
+#include <sys/time.h>
+#include <stdlib.h>
+
+sys_prot_t sys_arch_protect(void) { return 0; }
+void sys_arch_unprotect(sys_prot_t p) { (void)p; }
+
+u32_t sys_now(void) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+}
+
+u32_t lwip_port_rand(void) {
+    static unsigned long next = 1;
+    next = next * 1103515245 + 12345;
+    return (u32_t)(next / 65536) % 32768;
+}
+EOF
+
+gcc -I src/include -I contrib/ports/unix/port/include -c stubs.c -o stubs.o
+
+cd build
+ar rcs contrib/ports/unix/example_app/liblwipcore.a ../stubs.o
+make example_app
+```
+
+然后继续从第5步开始。
+
+---
+
+## ✅ 成功标志
+
+当你执行 `run` 后，程序输出 `Starting lwIP, local interface IP is 192.168.1.200`，然后在另一个终端用 `nc` 发送数据，GDB 显示：
+
+```
+Breakpoint 1, tcp_write (pcb=..., arg=..., len=..., apiflags=...) at tcp_out.c:394
+394     {
+```
+
+即表示成功。输入 `backtrace` 即可看到函数调用链。
+
+---
+
+这份清单可以直接保存为文本文件，每次重启后按顺序执行即可恢复调试环境。

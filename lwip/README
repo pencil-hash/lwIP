@@ -1,0 +1,195 @@
+INTRODUCTION
+
+lwIP is a small independent implementation of the TCP/IP protocol suite.
+
+The focus of the lwIP TCP/IP implementation is to reduce the RAM usage
+while still having a full scale TCP. This making lwIP suitable for use
+in embedded systems with tens of kilobytes of free RAM and room for
+around 40 kilobytes of code ROM.
+
+lwIP was originally developed by Adam Dunkels at the Computer and Networks
+Architectures (CNA) lab at the Swedish Institute of Computer Science (SICS)
+and is now developed and maintained by a worldwide network of developers.
+
+FEATURES
+
+  * IP (Internet Protocol, IPv4 and IPv6) including packet forwarding over
+    multiple network interfaces
+  * ICMP (Internet Control Message Protocol) for network maintenance and debugging
+  * IGMP (Internet Group Management Protocol) for multicast traffic management
+  * MLD (Multicast listener discovery for IPv6). Aims to be compliant with
+    RFC 2710. No support for MLDv2
+  * ND (Neighbor discovery and stateless address autoconfiguration for IPv6).
+    Aims to be compliant with RFC 4861 (Neighbor discovery) and RFC 4862
+    (Address autoconfiguration)
+  * DHCP, AutoIP/APIPA (Zeroconf), ACD (Address Conflict Detection)
+    and (stateless) DHCPv6
+  * UDP (User Datagram Protocol) including experimental UDP-lite extensions
+  * TCP (Transmission Control Protocol) with congestion control, RTT estimation
+    fast recovery/fast retransmit and sending SACKs
+  * raw/native API for enhanced performance
+  * Optional Berkeley-like socket API
+  * TLS: optional layered TCP ("altcp") for nearly transparent TLS for any
+    TCP-based protocol (ported to mbedTLS) (see changelog for more info)
+  * PPPoS and PPPoE (Point-to-point protocol over Serial/Ethernet)
+  * DNS (Domain name resolver incl. mDNS)
+  * 6LoWPAN (via IEEE 802.15.4, BLE or ZEP)
+
+
+APPLICATIONS
+
+  * HTTP server with SSI and CGI (HTTPS via altcp)
+  * SNMPv2c agent with MIB compiler (Simple Network Management Protocol), v3 via altcp
+  * SNTP (Simple network time protocol)
+  * NetBIOS name service responder
+  * MDNS (Multicast DNS) responder
+  * iPerf server implementation
+  * MQTT client (TLS support via altcp)
+
+
+LICENSE
+
+lwIP is freely available under a BSD license.
+
+
+DEVELOPMENT
+
+lwIP has grown into an excellent TCP/IP stack for embedded devices,
+and developers using the stack often submit bug fixes, improvements,
+and additions to the stack to further increase its usefulness.
+
+Development of lwIP is hosted on Savannah, a central point for
+software development, maintenance and distribution. Everyone can
+help improve lwIP by use of Savannah's interface, Git and the
+mailing list. A core team of developers will commit changes to the
+Git source tree.
+
+The lwIP TCP/IP stack is maintained in the 'src' directory and
+contributions (such as platform ports and applications) are in
+the 'contrib' directory.
+
+See doc/savannah.txt for details on Git server access for users and
+developers.
+
+The current Git tree is web-browsable:
+  https://git.savannah.gnu.org/cgit/lwip.git
+
+Submit patches and bugs via the lwIP project page:
+  https://savannah.nongnu.org/projects/lwip/
+
+Continuous integration builds (GCC, clang):
+  https://github.com/lwip-tcpip/lwip/actions
+
+
+DOCUMENTATION
+
+Self documentation of the source code is regularly extracted from the current
+Git sources and is available from this web page:
+  https://www.nongnu.org/lwip/
+
+Also, there are mailing lists you can subscribe at
+  https://savannah.nongnu.org/mail/?group=lwip
+plus searchable archives:
+  https://lists.nongnu.org/archive/html/lwip-users/
+  https://lists.nongnu.org/archive/html/lwip-devel/
+
+There is a wiki about lwIP at
+  https://lwip.wikia.com/wiki/LwIP_Wiki
+You might get questions answered there, but unfortunately, it is not as
+well maintained as it should be.
+
+lwIP was originally written by Adam Dunkels:
+  http://dunkels.com/adam/
+
+Reading Adam's papers, the files in docs/, browsing the source code
+documentation and browsing the mailing list archives is a good way to
+become familiar with the design of lwIP.
+
+Adam Dunkels <adam@sics.se>
+Leon Woestenberg <leon.woestenberg@gmx.net>
+
+
+
+
+
+
+**简介**
+
+lwIP 是 TCP/IP 协议栈的一个小型独立实现。
+
+lwIP TCP/IP 实现的重点是减少 RAM 使用量，同时仍提供功能完整的 TCP。这使得 lwIP 适用于只有几十 KB 空闲 RAM 和约 40 KB 代码 ROM 空间的嵌入式系统。
+
+lwIP 最初由 Adam Dunkels 在瑞典计算机科学研究所（SICS）的计算机与网络体系结构（CNA）实验室开发，目前由一个全球开发者网络进行开发和维护。
+
+**特性**
+
+*   IP（互联网协议，IPv4 和 IPv6），支持多网络接口的数据包转发
+*   ICMP（互联网控制消息协议），用于网络维护和调试
+*   IGMP（互联网组管理协议），用于组播流量管理
+*   MLD（IPv6 组播监听发现）。目标是与 RFC 2710 兼容，不支持 MLDv2
+*   ND（IPv6 邻居发现和无状态地址自动配置）。目标是与 RFC 4861（邻居发现）和 RFC 4862（地址自动配置）兼容
+*   DHCP、AutoIP/APIPA（零配置）、ACD（地址冲突检测）以及（无状态）DHCPv6
+*   UDP（用户数据报协议），包括实验性的 UDP-Lite 扩展
+*   TCP（传输控制协议），支持拥塞控制、RTT 估计、快速恢复/快速重传以及发送 SACK
+*   原生/裸 API，用于提升性能
+*   可选的类 Berkeley Socket API
+*   TLS：可选的分层 TCP（“altcp”），可为任何基于 TCP 的协议提供近乎透明的 TLS（已移植到 mbedTLS）（更多信息请参阅变更日志）
+*   PPPoS 和 PPPoE（串行/以太网上的点对点协议）
+*   DNS（域名解析器，包括 mDNS）
+*   6LoWPAN（通过 IEEE 802.15.4、BLE 或 ZEP）
+
+**应用程序**
+
+*   HTTP 服务器，支持 SSI 和 CGI（通过 altcp 支持 HTTPS）
+*   SNMPv2c 代理，带有 MIB 编译器（简单网络管理协议），通过 altcp 支持 v3
+*   SNTP（简单网络时间协议）
+*   NetBIOS 名称服务响应程序
+*   MDNS（组播 DNS）响应程序
+*   iPerf 服务器实现
+*   MQTT 客户端（通过 altcp 支持 TLS）
+
+**许可协议**
+
+lwIP 在 BSD 许可协议下免费提供。
+
+**开发**
+
+lwIP 已发展成为一个优秀的嵌入式设备 TCP/IP 协议栈，使用该协议栈的开发人员经常提交错误修复、改进和新增功能，以进一步提高其实用性。
+
+lwIP 的开发托管在 Savannah 上，这是一个软件开发、维护和分发的中心平台。每个人都可以通过 Savannah 的界面、Git 和邮件列表来帮助改进 lwIP。一个核心开发团队会将更改提交到 Git 源代码树中。
+
+lwIP TCP/IP 协议栈维护在 `src` 目录中，贡献内容（如平台移植和应用程序）位于 `contrib` 目录中。
+
+有关用户和开发者的 Git 服务器访问详情，请参阅 `doc/savannah.txt`。
+
+当前的 Git 树可通过网页浏览：
+`https://git.savannah.gnu.org/cgit/lwip.git`
+
+通过 lwIP 项目页面提交补丁和错误报告：
+`https://savannah.nongnu.org/projects/lwip/`
+
+持续集成构建（GCC、clang）：
+`https://github.com/lwip-tcpip/lwip/actions`
+
+**文档**
+
+源代码的自文档会定期从当前的 Git 源代码中提取，并可通过以下网页获取：
+`https://www.nongnu.org/lwip/`
+
+此外，您可以订阅邮件列表：
+`https://savannah.nongnu.org/mail/?group=lwip`
+以及可搜索的存档：
+`https://lists.nongnu.org/archive/html/lwip-users/`
+`https://lists.nongnu.org/archive/html/lwip-devel/`
+
+有一个关于 lwIP 的 wiki：
+`https://lwip.wikia.com/wiki/LwIP_Wiki`
+您可能在那里找到问题的答案，但遗憾的是，该 wiki 的维护不如预期。
+
+lwIP 的原始作者是 Adam Dunkels：
+`http://dunkels.com/adam/`
+
+阅读 Adam 的论文、`docs/` 目录下的文件、浏览源代码文档以及查阅邮件列表存档，是熟悉 lwIP 设计的好方法。
+
+Adam Dunkels `<adam@sics.se>`
+Leon Woestenberg `<leon.woestenberg@gmx.net>`

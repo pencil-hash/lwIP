@@ -1,0 +1,243 @@
+# 详细简要概括日志
+**项目目标**：通过 lwIP 协议栈学习 TCP/IP，用 GDB 追踪 `tcp_write` 函数，为实习/找工作打基础。
+
+#  2026年5月6日 周三
+## 今日已完成关键任务：
+
+1. **环境搭建**
+   - 在 Ubuntu 22.04 虚拟机中安装依赖（gcc, make, cmake, gdb, libpcap-dev, uml-utilities）。
+   - 从 GitHub 克隆 lwIP 源码（`lwip-tcpip/lwip`）。
+   - 配置 TAP 虚拟网卡（`tap0`，IP `192.168.1.1/24`），实现宿主机与 lwIP 网络互通。
+
+2. **编译与调试准备**
+   - 创建 `lwipopts.h` 配置文件（启用 `NO_SYS=1`, `LWIP_TCP=1`, `LWIP_ICMP=1` 等）。
+   - 修改 `contrib/examples/example_app/lwipcfg.h`，启用 TCP echo 服务（`#define LWIP_TCPECHO_APP 1`）。
+   - 解决编译错误：
+     - 复制 `lwipcfg.h.example` 为 `lwipcfg.h`。
+     - 删除 `test.c` 中未使用的断言函数。
+     - 编译链接时缺失 `sys_arch_protect`、`sys_now` 等底层函数，手动创建 `stubs.c` 并提供空实现，将其打包进 `liblwipcore.a`。
+
+3. **成功触发断点**
+   - 使用 GDB 调试 `example_app`，在 `tcp_write` 设置断点。
+   - 另一终端执行 `nc 192.168.1.200 7` 发送数据，GDB 命中断点，显示函数参数及调用位置。
+   - 验证了 TCP 数据从应用层（`tcpecho_raw`）到达 TCP 输出函数的完整路径。
+
+**当前状态**：
+- 可执行文件：`~/IwIP/lwip/build/contrib/ports/unix/example_app/example_app`
+- GDB 调试环境就绪，重启后按命令清单可快速恢复。
+- 已完成 lwIP 协议栈“初探”核心目标：环境搭建 + 函数追踪。
+
+---
+
+## 明日工作清单
+
+> **目标**：从“触发断点”进阶到“理解核心机制”，能够手画调用图、分析 TCP 首部字段、解释状态机。
+
+### 1. 画出完整函数调用图（手绘 + 电子版）
+- 在 GDB 中执行 `backtrace`，记录从 `main` → `tcpecho_raw_init` → `tcpecho_raw_recv` → `tcp_write` → `tcp_enqueue` → `tcp_output` → `ip_output` → `tapif_output` 的调用链。
+- 每层注明函数作用（例如 `tcp_enqueue` 将数据放入发送队列）。
+- **产出**：一张清晰的调用图照片/截图，存入项目笔记。
+
+### 2. 对照《TCP/IP详解》阅读 `tcp_pcb` 结构体
+- 打开 `src/include/lwip/tcp.h`，找到 `struct tcp_pcb`。
+- 对照书第15章 TCP 首部，在代码注释中标注每个字段对应的首部字段（如 `snd_nxt` → 序号，`rcv_nxt` → 确认号，`flags` → 标志位）。
+- **产出**：在源码中写注释，并整理成一份对比表格。
+
+### 3. 抓包验证 TCP 首部字段
+- 在运行 `example_app` 时，用 `tcpdump -i tap0 -w tcp_echo.pcap` 抓包。
+- 用 Wireshark 打开，观察 `nc` 发送数据时的 TCP 段（SYN, ACK, PSH, FIN）。
+- 找到实际发出的数据包，对照 `tcp_pcb` 中的字段值（如序号、窗口）。
+- **产出**：抓包文件分析截图 + 字段对应记录。
+
+### 4. 跟踪 TCP 状态机（三次握手）
+- 在 GDB 中设置断点 `break tcp_process`。
+- 运行程序，用 `nc` 连接，观察状态变化（`LISTEN` → `SYN_RCVD` → `ESTABLISHED`）。
+- 记录每次状态转换时调用的函数及关键变量。
+- **产出**：画出 TCP 状态转换路径图（至少包含握手部分）。
+
+### 5. 整理面试话术
+- 用一两段话总结：“我在 lwIP 中通过 GDB 追踪了 TCP 数据发送的完整流程，从 `tcpecho_raw` 到 `tcp_write` 再到 `ip_output`，并对照抓包理解了首部字段。”
+- 准备回答常见问题：
+  - “`tcp_write` 是立即发送吗？”（不一定，可能入队等待）
+  - “如何保证数据不丢？”（滑动窗口、重传等）
+- **产出**：一份面试问答草稿。
+
+---
+
+
+#  2026年5月8日 周五
+## 今日已完成关键任务
+重新测试了使用 GDB 调试 `example_app`，在 `tcp_write` 设置断点，能够成功实现。
+看了视频资源 第1讲：lwIP入门 第20讲：lwIP内存管理
+
+## 明日工作清单
+看视频资源
+- 第21讲：lwIP内存堆源码解析（49:57）
+- 第22讲：lwIP内存池原理解析（57:06）
+- 第23讲：lwIP内存管理课堂总结
+
+
+#  2026年5月9日 周六
+## 今日已完成关键任务
+看了视频资源 
+- 第21讲 lwIP内存堆源码解析
+- 第22讲 lwIP内存池原理解析
+- 第23讲 lwIP内存管理课堂总结
+- 第24讲 lwIP网络接口简简介
+- 第25讲 lwIP网络接口函数解析
+- 第26讲 lwIP网络数据包管理
+- 第27讲 lwIP网络数据包管理程序解析
+
+## 明日工作清单
+将上面看视频学到的东西，放在代码里去学习，理论和实践结合一下
+
+
+
+
+# 2026年6月13日
+## 今日已完成关键任务
+- 认识了解了 TCP/IP 的分层（应用层、传输层、网络层、链路层、物理层），大致了解了各层的功能及特点
+- 学习了分层实现的复用、封装和分解
+- 学习了如何看配置文件 lwipopts.h 中内容的含义
+
+## 明日任务
+- 执行总学习指南中的第二阶段-模块一：基础支撑——内存管理 & 数据包结构
+
+
+
+# 2026年6月14日 
+## 今天已完成关键任务
+- 了解了mem.c的大概框架 
+- 学习总结了mem_init()函数的实现，绘制了初始化后的内存布局图
+- 学习了mem_malloc()的前面部分，包括：拒绝0字节请求、调整请求大小、加锁并开始搜索、艘次是配搜索循环、检查当前空闲块是否够大
+
+## 明日休息 后日任务
+- 学习并总结完mem_malloc()
+- 学习总结 mem_free()
+- 学习防御性编程与协议栈思考 
+
+
+# 2026年6月16日
+## 今日已完成任务
+- 学习并总结完 mem_malloc()
+- 学习理解 mem_free()
+
+## 明日任务
+- 学习src/core/memp.c 中的 memp_init(void)  void *memp_malloc(memp_t type)  void memp_free(memp_t type, void *mem)  (四小时)
+
+
+# 2026年6月20日
+## 今日已完成任务
+- 了解了 src/core/memp.c 中的 memp_init(void)  void *memp_malloc(memp_t type)  void memp_free(memp_t type, void *mem)
+- 总结制作了memp.c的五副流程图 包括：静态内存池初始化流程、静态池单次内存分配流程、静态池释放流程+内存块物理布局、空闲链表状态时序变化 
+- 目前只能大概理解空闲链表状态时序变化  
+
+## 明日任务
+- 学习src/core/memp.c 中的memp_init_pool(const struct memp_desc *desc) void *memp_malloc_pool(const struct memp_desc *desc)  （三小时）
+- 理解手绘五副流程图
+- 
+
+
+
+# 2026年6月21日
+## 今日已完成任务
+- 理解并绘制了memp.c 文件的整体调用逻辑图
+
+## 明日任务
+- src/core/pbuf.c  pbuf结构体
+
+
+# 2026年6月22日
+## 今日已完成任务
+- 初步了解 pbuf_alloc 完整分配流程
+- 
+
+## 明日任务
+- pbuf_free 释放逻辑
+- pbuf_header / add_header / remove_header 头部偏移操作
+
+
+
+# 2026年6月24日
+## 今日已完成任务
+- 了解了 pbuf_free 释放逻辑
+- 初步了解了 pbuf_header / add_header / remove_header 头部偏移操作
+
+## 明日任务
+- 进一步了解 pbuf_header / add_header / remove_header 头部偏移操作
+
+
+# 2026年6月25日
+## 今日已完成任务
+- 了解 pbuf_header / add_header / remove_header 头部偏移操作
+- 生成了 src/core/netif.c的图解 并且粗略学习了一遍
+
+## 明日任务
+- src/core/ipv4/ip4.c ip4_input(), ip4_output(), ip4_reasm()
+- 
+
+
+# 2026年7月2日
+## 今日已完成任务
+- 学习了 src/core/ipv4/ip4.c ip4_input(), ip4_output(), ip4_reasm()对应的图解
+- 学习了 src/core/ipv4/icmp.c icmp_input(), icmp_dest_unreach()对应的图解
+- 学习了《TCP/IP详解 卷一：协议》第8章：ICMPv4和ICMPv6 的部分内容
+
+## 明日任务
+- 学习 src/core/udp.c struct udp_pcb, udp_input(), udp_send()
+- 学习src/core/tcp.h struct tcp_pcb
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
+# 2026年7月 日
+## 今日已完成任务
+- 
+- 
+
+## 明日任务
+- 
+
+
